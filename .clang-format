@@ -1,0 +1,12 @@
+BasedOnStyle: Microsoft
+AccessModifierOffset: -4
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: false
+AlignOperands: true
+AllowShortFunctionsOnASingleLine: None
+BreakBeforeBraces: Allman
+ColumnLimit: 120
+IndentWidth: 4
+PointerAlignment: Right
+SpaceAfterControlStatementKeyword: true
+UseTab: Never

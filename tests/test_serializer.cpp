@@ -1,56 +1,56 @@
+#include "../grapedb/record.h"
+#include "../grapedb/serializer.h"
 #include <gtest/gtest.h>
 #include <sstream>
-#include "../grapedb/serializer.h"
-#include "../grapedb/record.h"
 
-namespace grape
+namespace Grape
 {
-    TEST(SerializerTest, RoundTripTest)
-    {
-        std::string test_key = "test_key";
-        std::string test_value = "Hello, World!";
+TEST(SerializerTest, RoundTripTest)
+{
+    std::string test_key = "test_key";
+    std::string test_value = "Hello, World!";
 
-        std::vector<char> buffer = Serializer::serialize(test_key, test_value);
+    std::vector<char> buffer = Serializer::Serialize(test_key, test_value);
 
-        std::string data(buffer.begin(), buffer.end());
-        std::istringstream iss(data, std::ios::binary);
+    std::string data(buffer.begin(), buffer.end());
+    std::istringstream iss(data, std::ios::binary);
 
-        Record result = Serializer::deserialize(iss);
+    Record result = Serializer::Deserialize(iss);
 
-        EXPECT_TRUE(result.isValid);
-        EXPECT_EQ(result.key, test_key);
-        EXPECT_EQ(result.value, test_value);
-    }
+    EXPECT_TRUE(result.isValid);
+    EXPECT_EQ(result.key, test_key);
+    EXPECT_EQ(result.value, test_value);
+}
 
-    TEST(SerializerTest, EmptyStringsTest)
-    {
-        std::vector<char> buffer = Serializer::serialize("", "");
+TEST(SerializerTest, EmptyStringsTest)
+{
+    std::vector<char> buffer = Serializer::Serialize("", "");
 
-        std::string data(buffer.begin(), buffer.end());
-        std::istringstream iss(data, std::ios::binary);
+    std::string data(buffer.begin(), buffer.end());
+    std::istringstream iss(data, std::ios::binary);
 
-        Record result = Serializer::deserialize(iss);
+    Record result = Serializer::Deserialize(iss);
 
-        EXPECT_TRUE(result.isValid);
-        EXPECT_EQ(result.key, "");
-        EXPECT_EQ(result.value, "");
-    }
+    EXPECT_TRUE(result.isValid);
+    EXPECT_EQ(result.key, "");
+    EXPECT_EQ(result.value, "");
+}
 
-    TEST(SerializerTest, TombstoneStatusTest)
-    {
-        std::string key = "user";
-        std::string value = "alex";
+TEST(SerializerTest, TombstoneStatusTest)
+{
+    std::string key = "user";
+    std::string value = "alex";
 
-        auto buffer = Serializer::serialize(key, value);
-        EXPECT_EQ(buffer[0], 1);
+    auto buffer = Serializer::Serialize(key, value);
+    EXPECT_EQ(buffer[0], 1);
 
-        buffer[0] = 0;
+    buffer[0] = 0;
 
-        std::string data(buffer.begin(), buffer.end());
-        std::istringstream iss(data, std::ios::binary);
+    std::string data(buffer.begin(), buffer.end());
+    std::istringstream iss(data, std::ios::binary);
 
-        Record result = Serializer::deserialize(iss);
+    Record result = Serializer::Deserialize(iss);
 
-        EXPECT_FALSE(result.isValid);
-    }
-};
+    EXPECT_FALSE(result.isValid);
+}
+}; // namespace Grape
