@@ -4,7 +4,7 @@
 
 namespace Grape
 {
-void Database::load_index()
+void Database::LoadIndex()
 {
     file.seekg(0, std::ios::beg);
 
@@ -34,7 +34,7 @@ Database::Database(const std::string &filename)
         file.open(filename, std::ios::in | std::ios::out | std::ios::binary);
     }
 
-    load_index();
+    LoadIndex();
 }
 
 Database::~Database()
@@ -95,5 +95,14 @@ bool Database::Delete(const std::string &key)
     index.erase(key);
 
     return true;
+}
+void Database::Open(const std::string &path)
+{
+  currentPath = path;
+  if (file.is_open()) file.close();
+
+  file.open(path, std::ios::in | std::ios::out | std::ios::binary | std::ios::app);
+
+  LoadIndex();
 }
 } // namespace Grape
