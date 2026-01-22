@@ -11,13 +11,12 @@ else()
 endif()
 
 file(GLOB_RECURSE LIB_SOURCES "grapedb/*.cpp")
-add_library(grape_lib ${LIB_SOURCES})
+add_library(grapedb_lib ${LIB_SOURCES})
 
-add_executable(grapedb main.cpp)
-target_link_libraries(grapedb PRIVATE grape_lib)
+add_subdirectory(grapecli)
 
 add_executable(grapedb_benchmark benchmark.cpp)
-target_link_libraries(grapedb_benchmark PRIVATE grape_lib)
+target_link_libraries(grapedb_benchmark PRIVATE grapedb_lib)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -29,4 +28,4 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 add_executable(grapedb_tests tests/test_serializer.cpp tests/test_database.cpp)
-target_link_libraries(grapedb_tests PRIVATE gtest_main grape_lib)
+target_link_libraries(grapedb_tests PRIVATE gtest_main grapedb_lib)
