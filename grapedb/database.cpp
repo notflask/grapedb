@@ -45,7 +45,7 @@ Database::~Database()
         file.close();
 }
 
-void Database::Set(const std::string &key, const std::string &value)
+void Database::SetImpl(const std::string &key, const std::string &value)
 {
     file.clear();
     file.seekp(0, std::ios::end);
@@ -61,12 +61,20 @@ void Database::Set(const std::string &key, const std::string &value)
 
     if (file.tellp() > compactionThreshold)
     {
-        Compact();
+        CompactImpl();
     }
+}
+
+void Database::Set(const std::string &key, const std::string &value)
+{
+    std::lock_guard<std::mutex> lock(dbMutex);
+    SetImpl(key, value);
 }
 
 std::string Database::Get(const std::string &key)
 {
+    std::lock_guard<std::mutex> lock(dbMutex);
+
     if (index.find(key) == index.end())
         return "";
 
@@ -85,12 +93,14 @@ std::string Database::Get(const std::string &key)
 
 bool Database::Delete(const std::string &key)
 {
+    std::lock_guard<std::mutex> lock(dbMutex);
+
     if (index.find(key) == index.end())
     {
         return false;
     }
 
-    Set(key, "");
+    SetImpl(key, "");
 
     index.erase(key);
 
@@ -120,7 +130,7 @@ void Database::SetCompactionThreshold(int64_t threshold)
     this->compactionThreshold = threshold;
 }
 
-void Database::Compact()
+void Database::CompactImpl()
 {
     std::string tempPath = currentPath + ".tmp";
     std::fstream tempFile;
@@ -155,5 +165,11 @@ void Database::Compact()
     std::filesystem::rename(tempPath, currentPath);
 
     Open(currentPath);
+}
+
+void Database::Compact()
+{
+    std::lock_guard<std::mutex> lock(dbMutex);
+    CompactImpl();
 }
 } // namespace Grape
