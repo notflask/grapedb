@@ -17,6 +17,7 @@ private:
 
 public:
     Database(const std::string &filename);
+    Database() = default;
     ~Database();
 public:
     void Set(const std::string &key, const std::string &value);
