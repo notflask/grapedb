@@ -11,4 +11,4 @@ else()
 endif()
 
 file(GLOB_RECURSE GRAPEDB_SOURCES "grapedb/**.cpp" "grapedb/**.h")
-add_executable(grapedb ${GRAPEDB_SOURCES})
+add_executable(grapedb main.cpp ${GRAPEDB_SOURCES})
