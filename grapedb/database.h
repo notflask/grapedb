@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -10,7 +11,7 @@ class Database
 {
 private:
     std::fstream file;
-    std::unordered_map<std::string, long> index;
+    std::unordered_map<std::string, int64_t> index;
     std::string currentPath;
 
 private:

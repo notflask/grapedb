@@ -11,7 +11,7 @@ void Database::LoadIndex()
 
     while (file.peek() != EOF)
     {
-        long offset = file.tellg();
+        int64_t offset = file.tellg();
         Record record = Serializer::Deserialize(file);
 
         if (record.isValid)
@@ -50,7 +50,7 @@ void Database::Set(const std::string &key, const std::string &value)
     file.clear();
     file.seekp(0, std::ios::end);
 
-    long offset = file.tellp();
+    int64_t offset = file.tellp();
 
     std::vector<char> data = Serializer::Serialize(key, value);
     file.write(data.data(), data.size());
