@@ -1,4 +1,4 @@
-name: GrapeDB CI
+name: GrapeDB CI (C++23 Ready)
 
 on:
   push:
@@ -13,18 +13,19 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install Latest GCC
+    - name: Set up GCC 14
       run: |
-        sudo apt-get update
-        sudo apt-get install -y g++-13 cmake
-        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 100
-        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100
+        sudo apt update
+        sudo apt install -y g++-14
+        # Встановлюємо пріоритет для GCC 14
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 100 --slave /usr/bin/g++ g++ /usr/bin/g++-14
+        sudo update-alternatives --set gcc /usr/bin/gcc-14
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release
+      run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=g++-14
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/build --config Release
+      run: cmake --build build --config Release
 
     - name: Run Tests
-      run: ./${{github.workspace}}/build/grapedb_tests
+      run: ./build/grapedb_tests
