@@ -65,6 +65,21 @@ void Database::SetImpl(const std::string &key, const std::string &value)
     }
 }
 
+std::vector<std::string> Database::ListKeys()
+{
+    std::lock_guard<std::mutex> lock(dbMutex);
+
+    std::vector<std::string> keys;
+    keys.reserve(index.size());
+
+    for (const auto &pair : index)
+    {
+        keys.push_back(pair.first);
+    }
+
+    return keys;
+}
+
 void Database::Set(const std::string &key, const std::string &value)
 {
     std::lock_guard<std::mutex> lock(dbMutex);

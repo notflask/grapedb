@@ -31,6 +31,7 @@ private:
     void CompactImpl();
 
 public:
+    std::vector<std::string> ListKeys();
     void Set(const std::string &key, const std::string &value);
 
     std::string Get(const std::string &key);
@@ -38,7 +39,6 @@ public:
     void Open(const std::string &path);
 
     void SetCompactionThreshold(int64_t threshold);
-
     void Compact();
 };
 } // namespace Grape
