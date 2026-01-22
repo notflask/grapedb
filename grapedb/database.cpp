@@ -58,6 +58,11 @@ void Database::Set(const std::string &key, const std::string &value)
     file.flush();
 
     index[key] = offset;
+
+    if (file.tellp() > compactionThreshold)
+    {
+        Compact();
+    }
 }
 
 std::string Database::Get(const std::string &key)
@@ -108,5 +113,47 @@ void Database::Open(const std::string &path)
     }
 
     LoadIndex();
+}
+
+void Database::SetCompactionThreshold(int64_t threshold)
+{
+    this->compactionThreshold = threshold;
+}
+
+void Database::Compact()
+{
+    std::string tempPath = currentPath + ".tmp";
+    std::fstream tempFile;
+
+    tempFile.open(tempPath, std::ios::out | std::ios::binary);
+
+    if (!tempFile.is_open())
+        throw std::runtime_error("could not create temp file for compaction");
+
+    for (auto &pair : index)
+    {
+        std::string key = pair.first;
+        int64_t old_offset = pair.second;
+
+        file.seekg(old_offset, std::ios::beg);
+        Record record = Serializer::Deserialize(file);
+
+        if (!record.isValid)
+            return;
+
+        int64_t new_offset = tempFile.tellp();
+
+        std::vector<char> data = Serializer::Serialize(key, record.value);
+        tempFile.write(data.data(), data.size());
+
+        index[key] = new_offset;
+    }
+
+    tempFile.close();
+    file.close();
+
+    std::filesystem::rename(tempPath, currentPath);
+
+    Open(currentPath);
 }
 } // namespace Grape
