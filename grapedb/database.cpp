@@ -65,7 +65,7 @@ std::string Database::Get(const std::string &key)
     if (index.find(key) == index.end())
         return "";
 
-    long offset = index[key];
+    int64_t offset = index[key];
 
     file.clear();
     file.seekg(offset, std::ios::beg);
