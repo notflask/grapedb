@@ -1,7 +1,6 @@
 #include "database.h"
 
 #include "serializer.h"
-#include "deserializer.h"
 
 namespace grape
 {
@@ -13,7 +12,7 @@ namespace grape
         {
             long offset = file.tellg();
 
-            Record record = Deserializer::deserialize(file);
+            Record record = Serializer::deserialize(file);
 
             if (record.isValid)
                 index[record.key] = offset;
@@ -69,7 +68,7 @@ namespace grape
         file.clear();
         file.seekg(offset, std::ios::beg);
 
-        Record record = Deserializer::deserialize(file);
+        Record record = Serializer::deserialize(file);
 
         if (record.isValid)
             return record.value;
