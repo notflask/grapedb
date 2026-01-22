@@ -25,16 +25,7 @@ void Database::LoadIndex()
 
 Database::Database(const std::string &filename)
 {
-    file.open(filename, std::ios::in | std::ios::out | std::ios::binary);
-
-    if (!file.is_open())
-    {
-        file.open(filename, std::ios::out | std::ios::binary);
-        file.close();
-        file.open(filename, std::ios::in | std::ios::out | std::ios::binary);
-    }
-
-    LoadIndex();
+  Open(filename);
 }
 
 Database::~Database()
