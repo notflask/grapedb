@@ -7,17 +7,28 @@ namespace Grape
 void Database::LoadIndex()
 {
     file.seekg(0, std::ios::beg);
+    index.clear();
 
     while (file.peek() != EOF)
     {
         long offset = file.tellg();
-
         Record record = Serializer::Deserialize(file);
 
         if (record.isValid)
-            index[record.key] = offset;
+        {
+            if (record.value.empty())
+            {
+                index.erase(record.key);
+            }
+            else
+            {
+                index[record.key] = offset;
+            }
+        }
         else
+        {
             break;
+        }
     }
 
     file.clear();
@@ -25,7 +36,7 @@ void Database::LoadIndex()
 
 Database::Database(const std::string &filename)
 {
-  Open(filename);
+    Open(filename);
 }
 
 Database::~Database()
@@ -74,26 +85,28 @@ bool Database::Delete(const std::string &key)
         return false;
     }
 
-    long offset = index[key];
-
-    file.clear();
-    file.seekp(offset, std::ios::beg);
-
-    char tombstone = 0;
-    file.write(&tombstone, sizeof(tombstone));
-    file.flush();
+    Set(key, "");
 
     index.erase(key);
 
     return true;
 }
+
 void Database::Open(const std::string &path)
 {
-  currentPath = path;
-  if (file.is_open()) file.close();
+    if (file.is_open())
+        file.close();
 
-  file.open(path, std::ios::in | std::ios::out | std::ios::binary | std::ios::app);
+    currentPath = path;
+    file.open(currentPath, std::ios::in | std::ios::out | std::ios::binary | std::ios::app);
 
-  LoadIndex();
+    if (!file.is_open())
+    {
+        file.open(currentPath, std::ios::out | std::ios::binary);
+        file.close();
+        file.open(currentPath, std::ios::in | std::ios::out | std::ios::binary | std::ios::app);
+    }
+
+    LoadIndex();
 }
 } // namespace Grape
