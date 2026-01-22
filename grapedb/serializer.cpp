@@ -4,24 +4,19 @@ namespace grape
 {
     std::vector<char> Serializer::serialize(const std::string &key, const std::string &value)
     {
-        uint32_t key_length = static_cast<uint32_t>(key.size());
-        uint32_t value_length = static_cast<uint32_t>(value.size());
+        std::vector<char> buffer;
 
-        size_t total_size = sizeof(uint32_t) * 2 + key_length + value_length;
+        buffer.push_back(1);
 
-        std::vector<char> buffer(total_size);
-        char *ptr = buffer.data();
+        uint32_t key_len = static_cast<uint32_t>(key.size());
+        char *k_ptr = reinterpret_cast<char *>(&key_len);
+        buffer.insert(buffer.end(), k_ptr, k_ptr + sizeof(uint32_t));
+        buffer.insert(buffer.end(), key.begin(), key.end());
 
-        std::memcpy(ptr, &key_length, sizeof(uint32_t));
-        ptr += sizeof(uint32_t);
-
-        std::memcpy(ptr, &value_length, sizeof(uint32_t));
-        ptr += sizeof(uint32_t);
-
-        std::memcpy(ptr, key.data(), key_length);
-        ptr += key_length;
-
-        std::memcpy(ptr, value.data(), value_length);
+        uint32_t val_len = static_cast<uint32_t>(value.size());
+        char *v_ptr = reinterpret_cast<char *>(&val_len);
+        buffer.insert(buffer.end(), v_ptr, v_ptr + sizeof(uint32_t));
+        buffer.insert(buffer.end(), value.begin(), value.end());
 
         return buffer;
     }
@@ -31,27 +26,29 @@ namespace grape
         Record record;
         record.isValid = false;
 
-        uint32_t key_length = 0;
-        uint32_t value_length = 0;
-
-        if (!is.read(reinterpret_cast<char *>(&key_length), sizeof(uint32_t)))
+        char status;
+        if (!is.read(&status, 1))
             return record;
 
-        if (!is.read(reinterpret_cast<char *>(&value_length), sizeof(uint32_t)))
-            return record;
+        bool isActive = (status == 1);
 
-        record.key.resize(key_length);
-        record.value.resize(value_length);
+        uint32_t key_len;
+        is.read(reinterpret_cast<char *>(&key_len), sizeof(uint32_t));
+        std::string key(key_len, ' ');
+        is.read(&key[0], key_len);
 
-        if (key_length > 0)
-            if (!is.read(&record.key[0], key_length))
-                return record;
+        uint32_t val_len;
+        is.read(reinterpret_cast<char *>(&val_len), sizeof(uint32_t));
+        std::string value(val_len, ' ');
+        is.read(&value[0], val_len);
 
-        if (value_length > 0)
-            if (!is.read(&record.value[0], value_length))
-                return record;
+        if (isActive)
+        {
+            record.key = key;
+            record.value = value;
+            record.isValid = true;
+        }
 
-        record.isValid = true;
         return record;
     }
 };
