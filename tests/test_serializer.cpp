@@ -35,4 +35,22 @@ namespace grape
         EXPECT_EQ(result.key, "");
         EXPECT_EQ(result.value, "");
     }
+
+    TEST(SerializerTest, TombstoneStatusTest)
+    {
+        std::string key = "user";
+        std::string value = "alex";
+
+        auto buffer = Serializer::serialize(key, value);
+        EXPECT_EQ(buffer[0], 1);
+
+        buffer[0] = 0;
+
+        std::string data(buffer.begin(), buffer.end());
+        std::istringstream iss(data, std::ios::binary);
+
+        Record result = Serializer::deserialize(iss);
+
+        EXPECT_FALSE(result.isValid);
+    }
 };

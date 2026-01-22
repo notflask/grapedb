@@ -46,4 +46,22 @@ namespace grape
         Database db(test_db_name);
         EXPECT_EQ(db.Get("unknown_key"), "");
     }
+
+    TEST_F(DatabaseTest, FullDeleteCycleTest)
+    {
+        std::string key = "session_id";
+        std::string value = "abc_123";
+
+        {
+            Database db(test_db_name);
+            db.Set(key, value);
+            EXPECT_EQ(db.Get(key), value);
+
+            bool deleted = db.Delete(key);
+            EXPECT_TRUE(deleted);
+        }
+
+        Database db2(test_db_name);
+        EXPECT_EQ(db2.Get(key), "");
+    }
 };
