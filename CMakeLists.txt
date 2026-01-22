@@ -25,5 +25,5 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-add_executable(grapedb_tests tests/test_serializer.cpp)
+add_executable(grapedb_tests tests/test_serializer.cpp tests/test_database.cpp)
 target_link_libraries(grapedb_tests PRIVATE gtest_main grape_lib)
