@@ -16,6 +16,9 @@ add_library(grape_lib ${LIB_SOURCES})
 add_executable(grapedb main.cpp)
 target_link_libraries(grapedb PRIVATE grape_lib)
 
+add_executable(grapedb_benchmark benchmark.cpp)
+target_link_libraries(grapedb_benchmark PRIVATE grape_lib)
+
 include(FetchContent)
 FetchContent_Declare(
   googletest
