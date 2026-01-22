@@ -75,4 +75,25 @@ namespace grape
 
         return "";
     }
+
+    bool Database::Delete(const std::string &key)
+    {
+        if (index.find(key) == index.end())
+        {
+            return false;
+        }
+
+        long offset = index[key];
+
+        file.clear();
+        file.seekp(offset, std::ios::beg);
+
+        char tombstone = 0;
+        file.write(&tombstone, sizeof(tombstone));
+        file.flush();
+
+        index.erase(key);
+
+        return true;
+    }
 }
