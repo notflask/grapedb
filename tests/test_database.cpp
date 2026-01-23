@@ -113,4 +113,28 @@ TEST_F(DatabaseTest, AutoCompactionTriggeredTest)
 
     EXPECT_EQ(db.Get(key), value);
 }
+
+TEST_F(DatabaseTest, CompactionRecoveryTest)
+{
+    {
+        Database db;
+        db.Open(test_db_name);
+
+        db.Set("key1", "value1");
+        db.Set("key2", "value2");
+
+        std::string markerPath = test_db_name + ".compaction";
+        std::ofstream marker(markerPath);
+        marker << "1";
+        marker.close();
+    }
+
+    Database db;
+    db.Open(test_db_name);
+
+    EXPECT_EQ(db.Get("key1"), "value1");
+    EXPECT_EQ(db.Get("key2"), "value2");
+
+    EXPECT_FALSE(std::filesystem::exists(test_db_name + ".compaction"));
+}
 }; // namespace Grape
