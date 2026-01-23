@@ -121,8 +121,24 @@ int main(int argc, char **argv)
         }
         case Command::COMPACT:
         {
-            db.Compact();
-            std::println("compaction done");
+            try
+            {
+                auto before = std::filesystem::file_size(dbPath);
+
+                db.Compact();
+
+                auto after = std::filesystem::file_size(dbPath);
+                auto difference = before - after;
+
+                std::println("compaction is finished. reduced file size from {}B to {}B (by {}B)", before, after,
+                             difference);
+            }
+            catch (...)
+            {
+                std::println("(error) something went wrong during compaction. please, try again.");
+                break;
+            }
+
             break;
         }
         case Command::THRESHOLD:
@@ -169,6 +185,8 @@ int main(int argc, char **argv)
                 std::println("(error) unknown command '{}'", cmdStr);
             break;
         }
+
+        std::println();
     }
 
     return 0;
