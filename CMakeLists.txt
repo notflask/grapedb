@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(grapedb VERSION 0.1.0 LANGUAGES CXX)
+include(FetchContent)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -10,15 +11,22 @@ else()
     add_compile_options(-Wall -Wextra -Wpedantic) 
 endif()
 
+FetchContent_Declare(
+  spdlog
+  GIT_REPOSITORY https://github.com/gabime/spdlog.git
+  GIT_TAG        v1.13.0
+)
+FetchContent_MakeAvailable(spdlog)
+
 file(GLOB_RECURSE LIB_SOURCES "grapedb/*.cpp")
 add_library(grapedb_lib ${LIB_SOURCES})
+target_link_libraries(grapedb_lib PUBLIC spdlog::spdlog)
 
 add_subdirectory(grapecli)
 
 add_executable(grapedb_benchmark benchmark.cpp)
 target_link_libraries(grapedb_benchmark PRIVATE grapedb_lib)
 
-include(FetchContent)
 FetchContent_Declare(
   googletest
   URL https://github.com/google/googletest/archive/refs/heads/main.zip
