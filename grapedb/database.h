@@ -10,6 +10,14 @@
 
 namespace Grape
 {
+
+enum class CompactionState : uint8_t
+{
+    NONE = 0,
+    IN_PROGRESS = 1,
+    READY_TO_SWAP = 2
+};
+
 class Database
 {
 private:
@@ -17,10 +25,14 @@ private:
     std::unordered_map<std::string, int64_t> index;
     std::string currentPath;
     std::mutex dbMutex;
+
     int64_t compactionThreshold = 10 * 1024 * 1024;
 
 private:
     void LoadIndex();
+    void WriteCompactionMarker(CompactionState state);
+    CompactionState ReadCompactionMarker();
+    void RecoverFromInterruptedCompaction();
 
 public:
     Database(const std::string &filename);

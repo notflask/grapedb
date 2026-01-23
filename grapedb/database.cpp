@@ -34,6 +34,71 @@ void Database::LoadIndex()
     file.clear();
 }
 
+void Database::WriteCompactionMarker(CompactionState state)
+{
+    std::string markerPath = currentPath + ".compaction";
+    std::ofstream marker(markerPath, std::ios::binary);
+
+    if (!marker.is_open())
+    {
+        throw std::runtime_error("cannot write compaction marker");
+    }
+
+    char stateChar = static_cast<char>(state);
+
+    marker.write(&stateChar, 1);
+    marker.flush();
+    marker.close();
+}
+
+CompactionState Database::ReadCompactionMarker()
+{
+    std::string markerPath = currentPath + ".compaction";
+
+    if (!std::filesystem::exists(markerPath))
+        return CompactionState::NONE;
+
+    std::ifstream marker(markerPath, std::ios::binary);
+    char stateChar;
+
+    if (!marker.read(&stateChar, 1))
+        return CompactionState::NONE;
+
+    return static_cast<CompactionState>(stateChar);
+}
+
+void Database::RecoverFromInterruptedCompaction()
+{
+    std::string tempPath = currentPath + ".tmp";
+    CompactionState state = ReadCompactionMarker();
+
+    switch (state)
+    {
+    case CompactionState::READY_TO_SWAP:
+    {
+        std::cout << "recovering: completing interrupted compaction swap" << std::endl;
+
+        if (std::filesystem::exists(tempPath))
+            std::filesystem::rename(tempPath, currentPath);
+
+        break;
+    }
+    case CompactionState::IN_PROGRESS:
+    {
+        std::cout << "recovering: discarding incomplete compaction" << std::endl;
+
+        if (std::filesystem::exists(tempPath))
+            std::filesystem::remove(tempPath);
+
+        break;
+    }
+    case CompactionState::NONE:
+        break;
+    }
+
+    std::filesystem::remove(currentPath + ".compaction");
+}
+
 Database::Database(const std::string &filename)
 {
     Open(filename);
@@ -128,6 +193,10 @@ void Database::Open(const std::string &path)
         file.close();
 
     currentPath = path;
+
+    if (std::filesystem::exists(currentPath + ".compaction"))
+        RecoverFromInterruptedCompaction();
+
     file.open(currentPath, std::ios::in | std::ios::out | std::ios::binary | std::ios::app);
 
     if (!file.is_open())
@@ -148,12 +217,17 @@ void Database::SetCompactionThreshold(int64_t threshold)
 void Database::CompactImpl()
 {
     std::string tempPath = currentPath + ".tmp";
-    std::fstream tempFile;
 
+    WriteCompactionMarker(CompactionState::IN_PROGRESS);
+
+    std::fstream tempFile;
     tempFile.open(tempPath, std::ios::out | std::ios::binary);
 
     if (!tempFile.is_open())
+    {
+        WriteCompactionMarker(CompactionState::NONE);
         throw std::runtime_error("could not create temp file for compaction");
+    }
 
     for (auto &pair : index)
     {
@@ -164,7 +238,12 @@ void Database::CompactImpl()
         Record record = Serializer::Deserialize(file);
 
         if (!record.isValid)
-            return;
+        {
+            tempFile.close();
+            std::filesystem::remove(tempPath);
+            WriteCompactionMarker(CompactionState::NONE);
+            throw std::runtime_error("corrupted record during compaction");
+        }
 
         int64_t new_offset = tempFile.tellp();
 
@@ -174,12 +253,18 @@ void Database::CompactImpl()
         index[key] = new_offset;
     }
 
+    tempFile.flush();
     tempFile.close();
+
+    WriteCompactionMarker(CompactionState::READY_TO_SWAP);
+
     file.close();
 
     std::filesystem::rename(tempPath, currentPath);
 
-    Open(currentPath);
+    file.open(currentPath, std::ios::in | std::ios::out | std::ios::binary | std::ios::app);
+
+    std::filesystem::remove(currentPath + ".compaction");
 }
 
 void Database::Compact()
