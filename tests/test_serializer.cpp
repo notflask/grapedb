@@ -53,4 +53,23 @@ TEST(SerializerTest, TombstoneStatusTest)
 
     EXPECT_FALSE(result.isValid);
 }
+
+TEST(SerializerTest, CorruptedDataTest)
+{
+    std::string corrupted_data = "\x01\x00\x00\x00";
+    std::istringstream iss(corrupted_data, std::ios::binary);
+
+    Record result = Serializer::Deserialize(iss);
+
+    EXPECT_FALSE(result.isValid);
+}
+
+TEST(SerializerTest, EmptyStreamTest)
+{
+    std::istringstream iss("", std::ios::binary);
+
+    Record result = Serializer::Deserialize(iss);
+
+    EXPECT_FALSE(result.isValid);
+}
 }; // namespace Grape
