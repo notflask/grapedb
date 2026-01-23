@@ -13,4 +13,4 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(cxxopts)
 
 add_executable(grapecli main.cpp)
-target_link_libraries(grapecli PRIVATE grapedb_lib cxxopts::cxxopts)
+target_link_libraries(grapecli PRIVATE grapedb_lib cxxopts::cxxopts spdlog::spdlog)

@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <filesystem>
 #include <iostream>
 #include <print>
 #include <sstream>
@@ -5,6 +7,7 @@
 #include <vector>
 
 #include "../grapedb/database.h"
+#include "../grapedb/logger.h"
 #include <cxxopts.hpp>
 
 enum class Command
@@ -40,6 +43,9 @@ Command ParseCommand(const std::string &str)
 
 int main(int argc, char **argv)
 {
+    Grape::Log::Init();
+    auto logger = Grape::Log::GetLogger();
+
     cxxopts::Options options("grapecli", "Interactive CLI for GrapeDB");
 
     // clang-format off
@@ -64,7 +70,7 @@ int main(int argc, char **argv)
     db.Open(dbPath);
     db.SetCompactionThreshold(threshold);
 
-    std::println("opened database '{}' with threshold {}", dbPath, threshold);
+    logger->info("opened database '{}' with threshold {}", dbPath, threshold);
 
     while (true)
     {
@@ -103,7 +109,7 @@ int main(int argc, char **argv)
             std::getline(ss >> std::ws, value);
 
             db.Set(key, value);
-            std::println("set key '{}' to value '{}'", key, value);
+            logger->info("set key '{}' to value '{}'", key, value);
 
             break;
         }
@@ -113,9 +119,9 @@ int main(int argc, char **argv)
             ss >> key;
 
             if (db.Delete(key))
-                std::println("deleted value with key '{}'", key);
+                logger->info("deleted value with key '{}'", key);
             else
-                std::println("(error) key '{}' not found", key);
+                logger->error("(error) key '{}' not found", key);
 
             break;
         }
@@ -130,12 +136,12 @@ int main(int argc, char **argv)
                 auto after = std::filesystem::file_size(dbPath);
                 auto difference = before - after;
 
-                std::println("compaction is finished. reduced file size from {}B to {}B (by {}B)", before, after,
+                logger->info("compaction is finished. reduced file size from {}B to {}B (by {}B)", before, after,
                              difference);
             }
             catch (...)
             {
-                std::println("(error) something went wrong during compaction. please, try again.");
+                logger->error("(error) something went wrong during compaction. please, try again.");
                 break;
             }
 
@@ -149,11 +155,11 @@ int main(int argc, char **argv)
             try
             {
                 db.SetCompactionThreshold(std::stoll(newThreshold));
-                std::println("compaction threshold updated to '{}'", newThreshold);
+                logger->info("compaction threshold updated to '{}'", newThreshold);
             }
             catch (...)
             {
-                std::println("(error) invalid number '{}'", newThreshold);
+                logger->error("(error) invalid number '{}'", newThreshold);
             }
 
             break;
@@ -182,7 +188,7 @@ int main(int argc, char **argv)
             return 0;
         case Command::UNKNOWN:
             if (!cmdStr.empty())
-                std::println("(error) unknown command '{}'", cmdStr);
+                logger->error("(error) unknown command '{}'", cmdStr);
             break;
         }
 
