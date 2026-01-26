@@ -1,7 +1,7 @@
-<div style="display: flex; align-items: end;">
-    <img src="./assets/grapedb.png" style="max-width: 64px; margin-right: 8px;" />
-    <h1 style="margin: 0; border: none;">GrapeDB</h1>
-</div>
+<h1 style="border: none;">
+  <img src="./assets/grapedb.png" alt="GrapeDB" width="64" style="vertical-align: baseline;" /> 
+  GrapeDB
+</h1>
 
 ### A lightweight, persistent key-value database written in modern C++
 
